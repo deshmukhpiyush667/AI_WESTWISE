@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light !important;
+  --bg-main: #F7FAF7;
+  --card-bg: #FFFFFF;
+  --primary-green: #16845B;
+  --light-mint: #EAF5EC;
+  --text-main: #183B2B;
+  --text-secondary: #52705F;
+}
+
+html, body {
+  background-color: #F7FAF7;
+  color: #183B2B;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure no dark-mode overrides occur */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light !important;
+  }
+  body {
+    background-color: #F7FAF7 !important;
+    color: #183B2B !important;
+  }
+}
+
+/* Custom scrollbars with brand mint colors */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7FAF7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D3EAD7;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #16845B;
+}

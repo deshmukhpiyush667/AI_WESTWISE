@@ -1,0 +1,42 @@
+{
+  "random_seed": 42,
+  "classes": [
+    "E-Waste",
+    "Glass",
+    "Metal",
+    "Organic",
+    "Paper",
+    "Plastic"
+  ],
+  "summary": {
+    "total_images": 7200,
+    "train_count": 5040,
+    "val_count": 1080,
+    "test_count": 1080,
+    "duplicates_removed": 2488
+  },
+  "train_distribution": {
+    "Organic": 840,
+    "Paper": 840,
+    "Metal": 840,
+    "Plastic": 840,
+    "E-Waste": 840,
+    "Glass": 840
+  },
+  "val_distribution": {
+    "Organic": 180,
+    "E-Waste": 180,
+    "Paper": 180,
+    "Glass": 180,
+    "Metal": 180,
+    "Plastic": 180
+  },
+  "test_distribution": {
+    "E-Waste": 180,
+    "Metal": 180,
+    "Plastic": 180,
+    "Organic": 180,
+    "Glass": 180,
+    "Paper": 180
+  }
+}

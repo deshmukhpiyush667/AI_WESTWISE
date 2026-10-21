@@ -37,6 +37,10 @@ backend/*.sqlite3
 backend/ml/weights/*.h5
 backend/ml/weights/*.keras
 !backend/ml/weights/.gitkeep
+backend/ml/data/raw/
+backend/ml/data/*
+!backend/ml/data/.gitkeep
+!backend/ml/data/raw/.gitkeep
 
 # Environment Variables
 .env

@@ -1,0 +1,19 @@
+{
+  "architecture": "MobileNetV3Small Transfer Learning",
+  "classes": [
+    "Organic",
+    "Plastic",
+    "Paper",
+    "Metal",
+    "Glass",
+    "E-Waste"
+  ],
+  "epochs_head": 6,
+  "epochs_finetune": 3,
+  "final_val_accuracy": 0.8917,
+  "test_metrics": {
+    "test_accuracy": 0.9065,
+    "test_loss": 0.2868
+  },
+  "weights_file": "mobilenetv3_wastewise.weights.h5"
+}

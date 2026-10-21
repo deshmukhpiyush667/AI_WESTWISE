@@ -63,9 +63,8 @@ class WasteClassifier:
 
         inputs = tf.keras.Input(shape=(224, 224, 3))
         x = base_model(inputs, training=False)
-        x = layers.Dense(128, activation="relu")(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Dropout(0.2)(x)
+        x = layers.Dense(256, activation="relu")(x)
+        x = layers.Dropout(0.3)(x)
         outputs = layers.Dense(len(self._classes), activation="softmax")(x)
 
         model = models.Model(inputs=inputs, outputs=outputs, name="WasteWise_MobileNetV3")

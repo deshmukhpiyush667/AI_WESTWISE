@@ -1,85 +1,107 @@
 # AI WasteWise — AI-Based Waste Classification and Management System
 
-A full-stack, AI-powered automated waste segregation and management platform developed for final-year engineering capstone and major project evaluation.
+A production-grade, full-stack, AI-driven waste classification and environmental management platform engineered for final-year engineering capstone and academic evaluation.
 
 ---
 
 ## 🌟 Key Features
 
-1. **AI-Powered Image Classification**: Leverages **MobileNetV3 transfer learning** via TensorFlow/Keras to accurately classify waste into **6 categories**:
-   - 🍏 **Organic / Biodegradable** (Food waste, compostable matter)
-   - 🧴 **Plastic Waste** (PET bottles, wrappers, containers)
-   - 📦 **Paper & Cardboard** (Boxes, newspapers, cartons)
-   - 🥫 **Metal & Cans** (Soda cans, tin cans, foils)
-   - 🍾 **Glassware & Bottles** (Jars, containers)
-   - 🔋 **E-Waste & Hazardous** (Batteries, electronic hardware)
-2. **Camera & File Ingestion**:
-   - Drag-and-drop file uploader with instant client-side preview.
-   - Dual-mode camera integration: Native mobile device camera trigger (`capture="environment"`) and WebRTC live browser webcam preview with front/rear switching.
+1. **AI-Powered Deep Image Classification**:
+   - Built on **MobileNetV3 transfer learning** via TensorFlow/Keras with **90.65% held-out test accuracy** and **0.2868 test loss** evaluated on 1,080 unseen real-world images from the Merged Waste Classification Dataset (MWCD).
+   - Accurately classifies waste into **6 categories**:
+     - 🍏 **Organic / Biodegradable** (Food scraps, garden waste, compostable matter)
+     - 🧴 **Plastic Waste** (PET bottles, HDPE containers, rigid packaging)
+     - 📦 **Paper & Cardboard** (Boxes, newspapers, cartons, pulp packaging)
+     - 🥫 **Metal & Cans** (Aluminum soda cans, tin food cans, foil trays)
+     - 🍾 **Glassware & Bottles** (Culinary jars, beverage bottles, vials)
+     - 🔋 **E-Waste & Hazardous** (Electronics, cables, circuit boards, batteries)
+
+2. **Dual-Mode Camera & Image Ingestion**:
+   - Drag-and-drop file uploader supporting JPG, PNG, and WebP up to 10MB with instant preview.
+   - Live camera integration supporting mobile device camera capture (`capture="environment"`) and in-browser WebRTC video stream with front/rear lens switching.
+
 3. **Disposal Guidance & Ecological Insights**:
-   - Direct color-coded bin recommendation (Green, Blue, Yellow, Cyan, Red).
-   - Recyclability badge (Recyclable, Non-Recyclable, Hazardous).
-   - Step-by-step disposal protocol and real environmental impact metrics.
-4. **Uncertainty & Out-Of-Distribution (OOD) Guard**:
-   - Softmax confidence threshold ($< 60\%$) automatically flags ambiguous or unidentifiable items with advisory guidance rather than false certainty.
-5. **Audit Trail & Classification History**:
-   - Paginated historical log with category filtering, image thumbnails, confidence ratings, and record deletion.
-6. **Live Analytics Dashboard**:
-   - Real-time database metrics showing total scans, recyclable ratio, hazardous waste diverted, and average model confidence.
-   - Category distribution progress breakdown and 7-day volume trends.
-7. **Strict Light Theme UI**:
-   - Engineered adhering to the project palette:
-     - Primary Green: `#16845B`
-     - Light Mint: `#EAF5EC`
-     - Main Background: `#F7FAF7`
-     - Cards: `#FFFFFF`
-     - Main Text: `#183B2B`
-     - Secondary Text: `#52705F`
+   - Color-coded bin recommendations (Green, Blue, Yellow, Cyan, Red).
+   - Recyclability badge (Recyclable, Compostable, Hazardous).
+   - Practical preparation instructions (cleaning, flattening, lid separation).
+   - Scientifically grounded environmental impact metrics per category.
+
+4. **Confidence Transparency & Uncertainty Guard**:
+   - Predictions with confidence $< 60\%$ automatically trigger an **Uncertainty Alert** rather than presenting false certainty.
+   - Full softmax probability distribution breakdown across all classes.
+
+5. **User Feedback & Misclassification Triage Queue**:
+   - Users can report misclassifications and suggest correct categories.
+   - Reports enter a protected triage queue for administrator review to prevent dataset poisoning; unverified feedback is never used to automatically retrain the neural network.
+
+6. **Authentication, RBAC & User Isolation**:
+   - Secure JWT-based authentication with bcrypt password hashing.
+   - User registration (+50 welcome points), login, logout, password change, and token-based forgot/reset password workflows.
+   - Role-Based Access Control (`user` vs `admin`).
+   - Strict user data isolation: users only see and export their own scan history.
+
+7. **Gamification, Eco-Points & Badges**:
+   - Configurable weekly challenges and daily streaks.
+   - Eco-points awarded strictly for recorded scans (+10 pts) and verified actions.
+   - Unlockable sustainability badges (First Step, Polymer Guardian, Circuit Savior, Eco Centurion) and community leaderboard.
+
+8. **Verified Recycling & E-Waste Center Locator**:
+   - Real-world directory of verified municipal collection points and certified e-waste facilities.
+   - Filter by accepted material type (Plastic, Paper, Metal, Glass, Organic, E-Waste).
+   - Geolocation-based distance calculation via Haversine formula with graceful fallback on permission denial.
+   - Direct navigation links to Google Maps.
+
+9. **Searchable Comprehensive Waste Guide**:
+   - Interactive database of accepted items, contaminants to avoid, bin rules, and preparation protocols for all 6 target classes.
+
+10. **Administrator Control Plane**:
+    - Role-protected dashboard monitoring total registered users, scan volume, category distribution, and model version telemetry.
+    - Review and resolve user misclassification reports.
+    - Verified test-set benchmark display clearly separated from inference confidence scores.
+
+11. **Data Portability**:
+    - One-click scan history export to structured CSV reports.
+
+12. **Strict Light Theme UI**:
+    - Complies with the specified design palette:
+      - Primary Green: `#16845B`
+      - Light Mint: `#EAF5EC`
+      - Main Background: `#F7FAF7`
+      - White Cards: `#FFFFFF`
+      - Main Text: `#183B2B`
+      - Secondary Text: `#52705F`
 
 ---
 
-## 🏗️ System Architecture
+## 📊 Dataset & Model Benchmark Results
 
-```text
-       ┌────────────────────────────────────────────────────────┐
-       │                React 19 Frontend (Vite)                │
-       │    - Camera / File Upload   - Disposal Guidance Card   │
-       │    - History View           - Live Analytics Dashboard │
-       └───────────────────────────┬────────────────────────────┘
-                                   │ HTTP Multipart / REST
-                                   ▼
-       ┌────────────────────────────────────────────────────────┐
-       │                 FastAPI Python Backend                 │
-       │  ┌─────────────────────────┐ ┌──────────────────────┐  │
-       │  │ Pillow & NumPy Preproc  │ │ MobileNetV3 Transfer │  │
-       │  │ (224x224, EXIF, RGB)    │ │ Learning Engine      │  │
-       │  └─────────────────────────┘ └──────────────────────┘  │
-       │  ┌─────────────────────────┐ ┌──────────────────────┐  │
-       │  │ Uncertainty Guard       │ │ SQLAlchemy ORM       │  │
-       │  │ (Confidence < 0.60)     │ │ (PostgreSQL / SQLite)│  │
-       │  └─────────────────────────┘ └──────────────────────┘  │
-       └───────────────────────────┬────────────────────────────┘
-                                   │
-                                   ▼
-       ┌────────────────────────────────────────────────────────┐
-       │         PostgreSQL Database / Uploads Storage          │
-       │  - classification_records table                        │
-       │  - backend/app/uploads/ (sanitized images)             │
-       └────────────────────────────────────────────────────────┘
-```
+The model was trained on the **Merged Waste Classification Dataset (MWCD)**:
+
+| Metric | Value |
+| :--- | :--- |
+| **Total Images Inspected** | 35,168 raw images across 9 subdirectories |
+| **Deduplicated Balanced Subset** | 7,200 unique images (2,488 byte-exact duplicates removed to prevent leakage) |
+| **Stratified Split Ratio** | 70% Train (5,040) / 15% Validation (1,080) / 15% Held-Out Test (1,080) |
+| **Target Classes** | 6 balanced classes (840 train / 180 val / 180 test per class) |
+| **Backbone Architecture** | MobileNetV3-Small (ImageNet pre-trained) |
+| **Training Scheme** | Stage 1: Frozen backbone (6 epochs) + Stage 2: Top 30 layer fine-tuning (3 epochs) |
+| **Held-Out Test Accuracy** | **90.65%** |
+| **Held-Out Test Loss** | **0.2868** |
+| **Validation Accuracy** | **89.17%** |
+| **Average CPU Inference Latency**| **~28.4 ms** per image |
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology | Purpose |
+| Layer | Technology | Details |
 | :--- | :--- | :--- |
-| **Frontend** | React 19, Vite, Tailwind CSS, Lucide Icons | Responsive, mobile-first light theme interface |
-| **Backend API** | Python 3.13, FastAPI, Uvicorn | High-throughput asynchronous RESTful API |
-| **Deep Learning** | TensorFlow 2.20, Keras 3, MobileNetV3 | Lightweight transfer learning waste classifier |
-| **Image Processing** | Pillow, NumPy | EXIF orientation, RGB channel hygiene, 224x224 tensor normalization |
-| **Database & ORM** | PostgreSQL / SQLite, SQLAlchemy 2.0 | Transactional persistence of prediction records & analytics |
-| **Testing** | Pytest, HTTPX, Vitest, React Testing Library | Full test coverage across backend and frontend |
+| **Frontend** | React 19, Vite, Tailwind CSS, Lucide Icons | Responsive, accessible, mobile-first light theme |
+| **Backend API** | Python 3.13, FastAPI, Uvicorn | Asynchronous REST API with CORS and JWT security |
+| **Deep Learning** | TensorFlow 2.20, Keras 3, MobileNetV3 | Fine-tuned convolutional neural network |
+| **Database & ORM** | PostgreSQL / SQLite fallback, SQLAlchemy 2.0 | Multi-table schema with relational foreign keys |
+| **Security** | Passlib (bcrypt), python-jose, python-multipart | PBKDF2/bcrypt hashing, JWT tokens |
+| **Testing** | Pytest, HTTPX, Vitest, Testing Library | 19 backend tests + 5 frontend tests |
 
 ---
 
@@ -88,68 +110,57 @@ A full-stack, AI-powered automated waste segregation and management platform dev
 ### 1. Prerequisites
 - Python 3.10+ (tested on Python 3.13)
 - Node.js v18+ & npm
-- Git
 
 ### 2. Backend Setup
 ```bash
-cd backend
-
-# Install dependencies
-python -m pip install -r requirements.txt
-
-# Configure environment (defaults to SQLite; update for PostgreSQL)
-cp .env.example .env
+# From workspace root
+# Install backend dependencies
+python -m pip install -r backend/requirements.txt
 
 # Run backend development server
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --app-dir backend --port 8000
 ```
-- Interactive API Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Interactive Swagger API Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
 - API Health Status: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 
 ### 3. Frontend Setup
 ```bash
+# In a new terminal
 cd frontend
 
 # Install dependencies
 npm install
 
 # Run frontend development server
-npm run dev
+npm run dev -- --host
 ```
 - Web Application: [http://localhost:5173](http://localhost:5173)
 
----
-
-## 🐘 Configuring PostgreSQL
-
-To connect the application to PostgreSQL:
-1. Ensure your PostgreSQL server is active and create a database named `wastewise`:
-   ```sql
-   CREATE DATABASE wastewise;
-   ```
-2. Open `backend/.env` and update the `DATABASE_URL`:
-   ```ini
-   DATABASE_URL=postgresql+psycopg2://postgres:your_password@localhost:5432/wastewise
-   ```
-3. Restart the FastAPI server. SQLAlchemy will automatically initialize the `classification_records` table on launch.
+### Default Admin Credentials
+- **Email:** `admin@wastewise.org`
+- **Password:** `Admin@WasteWise2026!`
 
 ---
 
 ## 🧪 Running Automated Tests
 
-### Backend Unit & Integration Tests (Pytest)
+### Backend Test Suite (Pytest - 19 Tests)
 ```bash
-# From the project root
+# Runs full auth, admin, classification, image processing, and centers tests
 python -m pytest backend/tests -v
 ```
-*Tests cover image format verification, corrupted file rejection, dimension boundaries, classification endpoint flow, database persistence, history pagination, and dashboard stats aggregation.*
 
-### Frontend Component Tests (Vitest)
+### Frontend Test Suite (Vitest - 5 Tests)
 ```bash
 cd frontend
 npm test
 ```
-*Tests cover confident prediction displays, uncertainty warning badges, probability breakdowns, and guidance cards.*
+
+### Frontend Production Build Verification
+```bash
+cd frontend
+npm run build
+```
 
 ---
 
@@ -158,64 +169,99 @@ npm test
 ```text
 AI-WasteWise/
 ├── README.md
-├── .gitignore
 ├── backend/
 │   ├── requirements.txt
 │   ├── pytest.ini
-│   ├── .env.example
 │   ├── app/
-│   │   ├── main.py                    # FastAPI entrypoint, CORS, static uploads
-│   │   ├── config.py                  # Pydantic Settings
-│   │   ├── api/v1/endpoints/
-│   │   │   ├── classify.py            # Image upload & AI prediction
-│   │   │   ├── history.py             # Paginated history & delete
-│   │   │   ├── stats.py               # Dashboard aggregation
-│   │   │   └── health.py              # Health & categories metadata
+│   │   ├── main.py                     # FastAPI entrypoint, lifespan pre-warming, static mounts
+│   │   ├── config.py                   # Pydantic Settings
+│   │   ├── api/
+│   │   │   ├── deps.py                 # JWT dependency guards (get_current_user, get_current_admin)
+│   │   │   └── v1/
+│   │   │       ├── router.py           # Unified REST API router
+│   │   │       └── endpoints/
+│   │   │           ├── auth.py         # Login, register, me, change-password, forgot/reset-password
+│   │   │           ├── classify.py     # Waste classification with user attribution & eco-points
+│   │   │           ├── history.py      # Scan history, user isolation, item deletion, CSV export
+│   │   │           ├── centers.py      # Recycling centers directory with Haversine distance
+│   │   │           ├── feedback.py     # User misclassification feedback reports
+│   │   │           ├── gamification.py # Eco challenges, badges, and leaderboard
+│   │   │           ├── admin.py        # Admin stats, user management, feedback triage, telemetry
+│   │   │           ├── stats.py        # Dashboard metrics
+│   │   │           └── health.py       # Health check & category metadata
 │   │   ├── core/
-│   │   │   ├── guidance.py            # Disposal knowledge base
-│   │   │   └── exceptions.py          # API error handlers
+│   │   │   ├── security.py             # Bcrypt hashing & JWT encode/decode
+│   │   │   ├── guidance.py             # Bin rules & environmental impact knowledge base
+│   │   │   └── exceptions.py           # Standardized error handlers
 │   │   ├── db/
-│   │   │   ├── session.py             # SQLAlchemy session factory
-│   │   │   └── base.py                # Declarative base
+│   │   │   ├── base.py                 # DeclarativeBase with model registrations
+│   │   │   ├── session.py              # Engine factory (PostgreSQL with SQLite fallback)
+│   │   │   └── init_db.py              # Seeds admin user, recycling centers & eco-challenges
 │   │   ├── models/
-│   │   │   └── classification.py      # ClassificationRecord ORM table
-│   │   ├── schemas/                   # Pydantic request/response models
+│   │   │   ├── user.py                 # User ORM entity
+│   │   │   ├── classification.py       # ClassificationRecord ORM entity
+│   │   │   ├── center.py               # RecyclingCenter ORM entity
+│   │   │   ├── feedback.py             # UserFeedback ORM entity
+│   │   │   └── gamification.py         # EcoChallenge & UserBadge ORM entities
+│   │   ├── schemas/                    # Pydantic request/response schemas
 │   │   ├── services/
-│   │   │   ├── ai_model.py            # MobileNetV3 Transfer Learning engine
-│   │   │   └── image_processor.py     # Pillow & NumPy preprocessing
-│   │   └── uploads/                   # Sanitized image storage
+│   │   │   ├── ai_model.py             # MobileNetV3 inference engine & weight loader
+│   │   │   └── image_processor.py      # EXIF correction & 224x224 tensor normalization
+│   │   └── uploads/                    # Sanitized uploaded images
 │   ├── ml/
-│   │   ├── labels.json                # Supported classes
-│   │   ├── train_mobilenetv3.py       # Dataset fine-tuning script
-│   │   └── weights/                   # MobileNetV3 model weights
-│   └── tests/                         # Pytest test suite
-│
+│   │   ├── inspect_dataset.py          # Non-destructive MWCD dataset inspector
+│   │   ├── prepare_dataset.py          # Stratified deduplicated 70/15/15 dataset builder
+│   │   ├── train_mobilenetv3.py        # Two-stage MobileNetV3 transfer learning training script
+│   │   ├── dataset_split_manifest.json # Split metadata and class distributions
+│   │   ├── training_metrics.json       # Exact held-out test evaluation benchmarks
+│   │   └── weights/
+│   │       └── mobilenetv3_wastewise.weights.h5 # Trained fine-tuned model weights
+│   └── tests/                          # 19 automated Pytest tests
 └── frontend/
     ├── package.json
-    ├── vite.config.js
-    ├── tailwind.config.js             # Strict light theme configuration
-    ├── index.html
+    ├── tailwind.config.js              # Strict light theme configuration
     ├── src/
-    │   ├── index.css                  # Light-only color enforcement
-    │   ├── App.jsx                    # Navigation & layout
-    │   ├── api/client.js              # REST API client
+    │   ├── context/
+    │   │   └── AuthContext.jsx         # React auth context & token management
+    │   ├── api/
+    │   │   └── client.js               # Comprehensive REST API client & CSV exporter
     │   ├── components/
-    │   │   ├── common/Navbar.jsx      # Mobile-responsive light navbar
-    │   │   ├── common/Footer.jsx
-    │   │   ├── classify/ImageUploader.jsx
-    │   │   ├── classify/CameraModal.jsx
-    │   │   ├── classify/PredictionCard.jsx
-    │   │   └── classify/GuidanceCard.jsx
+    │   │   ├── common/
+    │   │   │   ├── Navbar.jsx          # Light theme navbar with user menu & admin badge
+    │   │   │   └── Footer.jsx          # Light theme footer
+    │   │   └── classify/
+    │   │       ├── ImageUploader.jsx   # Drag-and-drop file upload & preview
+    │   │       ├── CameraModal.jsx     # WebRTC & mobile camera capture
+    │   │       ├── PredictionCard.jsx  # Confidence meter, probabilities, feedback report modal
+    │   │       └── GuidanceCard.jsx    # Target bin & disposal steps
     │   ├── pages/
-    │   │   ├── ClassifyPage.jsx
-    │   │   ├── HistoryPage.jsx
-    │   │   └── DashboardPage.jsx
-    │   └── tests/                     # Vitest test suite
+    │   │   ├── HomePage.jsx            # Modern environmental SaaS landing page
+    │   │   ├── ClassifyPage.jsx        # Waste classification page
+    │   │   ├── WasteGuidePage.jsx      # Searchable disposal guide for 6 categories
+    │   │   ├── RecyclingLocatorPage.jsx# Center locator with material filter & distance
+    │   │   ├── EcoChallengesPage.jsx   # Eco-points, challenges, badges & leaderboard
+    │   │   ├── HistoryPage.jsx         # User scan history with search & CSV export
+    │   │   ├── DashboardPage.jsx       # Real database analytics & 7-day trend
+    │   │   ├── ProfilePage.jsx         # User profile, password change, CSV export
+    │   │   ├── AdminDashboardPage.jsx  # Administrator control plane & feedback triage
+    │   │   ├── LoginPage.jsx           # User login page
+    │   │   ├── RegisterPage.jsx        # User registration page (+50 points)
+    │   │   └── ForgotPasswordPage.jsx  # Token-based password recovery
+    │   └── tests/                      # 5 Vitest component and navigation tests
 ```
 
 ---
 
-## 🎓 Academic Presentation Notes
+## 🎓 Academic Presentation & Defense Notes
 
-- **Model Choice Rationale**: MobileNetV3 Small was selected over heavier architectures (ResNet-50 / VGG-16) due to its superior inference latency on edge/client-server configurations and inverted residual blocks with hard-swish activation, making it suitable for mobile waste capture applications.
-- **Handling False Positives**: Waste classification in practical environments suffers from ambiguous and out-of-distribution items. The built-in uncertainty threshold ensures the system does not give misleading high-confidence recommendations on unrecognizable items.
+1. **Why MobileNetV3-Small?**
+   - In comparison to heavier backbones like ResNet-50 or VGG-16, MobileNetV3 employs depthwise separable convolutions, hard-swish non-linear activations, and squeeze-and-excitation attention blocks. This achieves an inference latency of **~28.4ms on CPU**, making it suitable for edge and mobile deployments without requiring expensive GPU servers.
+
+2. **Mitigating Data Leakage**:
+   - The raw MWCD dataset contained 2,488 byte-exact duplicate images. If left unaddressed, identical copies would appear across both training and test sets, artificially inflating reported accuracy. Our pipeline pruned duplicates and enforced a reproducible stratified split with a fixed random seed (`seed=42`).
+
+3. **Inference vs. Accuracy Distinction**:
+   - A common pitfall in ML applications is confusing an individual prediction's softmax confidence with true model accuracy. The application explicitly distinguishes individual prediction confidence from overall generalization accuracy (**90.65% on held-out test data**).
+
+4. **Safety & Triage Queue Against Data Poisoning**:
+   - Rather than automatically retraining weights on arbitrary user inputs (which leaves models vulnerable to malicious adversarial data poisoning), user-reported misclassifications are routed to an administrative triage review queue.

@@ -54,7 +54,14 @@ A production-grade, full-stack, AI-driven waste classification and environmental
 9. **Searchable Comprehensive Waste Guide**:
    - Interactive database of accepted items, contaminants to avoid, bin rules, and preparation protocols for all 6 target classes.
 
-10. **Administrator Control Plane**:
+10. **Interactive Conversational AI Assistant (“Chat with AI”)**:
+    - Dedicated waste segregation and recycling chatbot connected to **Google Gemini** (or OpenAI).
+    - Transparent zero-config offline knowledge-base fallback when no API key is configured.
+    - Context-aware scan referencing: explains previous image scans directly from the database.
+    - Quick chip queries for common waste questions ("How do I recycle plastic?", "How should I dispose of batteries?").
+    - Strict focus guard on waste management, recycling, and sustainable living.
+
+11. **Administrator Control Plane**:
     - Role-protected dashboard monitoring total registered users, scan volume, category distribution, and model version telemetry.
     - Review and resolve user misclassification reports.
     - Verified test-set benchmark display clearly separated from inference confidence scores.

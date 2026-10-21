@@ -7,8 +7,16 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.db.base import Base
-from app.db.session import engine
-import app.models.classification  # Ensure models are registered with Base
+from app.db.session import engine, SessionLocal
+
+# Import all models to ensure declarative registration
+import app.models.user
+import app.models.classification
+import app.models.feedback
+import app.models.center
+import app.models.gamification
+
+from app.db.init_db import init_db
 from app.api.v1.router import api_router
 from app.core.exceptions import http_exception_handler, general_exception_handler
 from app.services.ai_model import get_classifier
@@ -29,6 +37,14 @@ async def lifespan(app: FastAPI):
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     Base.metadata.create_all(bind=engine)
     
+    # Initialize default admin, centers, and challenges
+    try:
+        db = SessionLocal()
+        init_db(db)
+        db.close()
+    except Exception as e:
+        logger.warning(f"Could not run init_db seeds: {e}")
+
     # Pre-warm AI model classifier
     try:
         logger.info("Pre-warming MobileNetV3 waste classifier...")
@@ -47,10 +63,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Configure CORS - allows frontend ports
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

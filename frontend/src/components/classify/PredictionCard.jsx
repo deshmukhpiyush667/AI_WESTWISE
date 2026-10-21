@@ -1,15 +1,62 @@
 import React, { useState } from 'react';
-import { CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, Layers, HelpCircle } from 'lucide-react';
+import {
+  CheckCircle2,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Layers,
+  HelpCircle,
+  Flag,
+  Send,
+  X,
+} from 'lucide-react';
 import { CATEGORY_COLORS } from '../../utils/constants';
+import { submitClassificationFeedback } from '../../api/client';
 
 export default function PredictionCard({ prediction }) {
   const [showAllProbabilities, setShowAllProbabilities] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [suggestedCategory, setSuggestedCategory] = useState('');
+  const [feedbackNotes, setFeedbackNotes] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(null);
 
   if (!prediction) return null;
 
-  const { predicted_class, confidence, is_uncertain, probabilities } = prediction;
+  const { record_id, predicted_class, confidence, is_uncertain, probabilities } = prediction;
   const confidencePercent = Math.round(confidence * 100);
   const colorTheme = CATEGORY_COLORS[predicted_class] || CATEGORY_COLORS['Uncertain'];
+
+  const availableCategories = ['Organic', 'Plastic', 'Paper', 'Metal', 'Glass', 'E-Waste'];
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (!suggestedCategory) {
+      setFeedbackError('Please select what you think the correct category is.');
+      return;
+    }
+    setSubmittingFeedback(true);
+    setFeedbackError(null);
+    try {
+      await submitClassificationFeedback({
+        record_id: record_id,
+        actual_category: suggestedCategory,
+        notes: feedbackNotes.trim(),
+      });
+      setFeedbackSuccess(true);
+      setTimeout(() => {
+        setShowFeedbackModal(false);
+        setFeedbackSuccess(false);
+        setSuggestedCategory('');
+        setFeedbackNotes('');
+      }, 2000);
+    } catch (err) {
+      setFeedbackError(err.message || 'Failed to submit feedback');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   return (
     <div className="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-[#D3EAD7] shadow-[0_4px_20px_-2px_rgba(24,59,43,0.06)] space-y-6">
@@ -34,9 +81,9 @@ export default function PredictionCard({ prediction }) {
             <span
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold border shadow-xs"
               style={{
-                backgroundColor: colorTheme.bg,
-                color: colorTheme.text,
-                borderColor: colorTheme.border,
+                backgroundColor: colorTheme?.bg || '#EAF5EC',
+                color: colorTheme?.text || '#16845B',
+                borderColor: colorTheme?.border || '#D3EAD7',
               }}
             >
               <CheckCircle2 className="w-4 h-4" />
@@ -116,6 +163,109 @@ export default function PredictionCard({ prediction }) {
                 })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Misclassification Feedback Trigger */}
+      {record_id && (
+        <div className="pt-2 border-t border-[#F2F9F3] flex justify-end">
+          <button
+            onClick={() => setShowFeedbackModal(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#52705F] hover:text-[#16845B] transition-colors"
+          >
+            <Flag className="w-3.5 h-3.5" />
+            Report Misclassification
+          </button>
+        </div>
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-[#FFFFFF] rounded-3xl border border-[#D3EAD7] shadow-modal w-full max-w-md p-6 relative">
+            <button
+              onClick={() => setShowFeedbackModal(false)}
+              className="absolute top-5 right-5 text-[#52705F] hover:text-[#183B2B]"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-[#EAF5EC] flex items-center justify-center text-[#16845B]">
+                <Flag className="w-4 h-4" />
+              </div>
+              <h4 className="text-lg font-bold text-[#183B2B]">Help Improve WasteWise</h4>
+            </div>
+
+            <p className="text-xs text-[#52705F] mb-4">
+              AI predicted: <strong className="text-[#183B2B]">{predicted_class}</strong>. Your feedback will be queued for manual review by researchers to improve future models.
+            </p>
+
+            {feedbackSuccess ? (
+              <div className="p-4 rounded-2xl bg-[#EAF5EC] border border-[#D3EAD7] text-center text-xs font-bold text-[#16845B] flex flex-col items-center gap-2 py-6">
+                <CheckCircle2 className="w-8 h-8" />
+                Thank you! Your feedback has been queued for administrator review.
+              </div>
+            ) : (
+              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                {feedbackError && (
+                  <div className="p-2.5 rounded-xl bg-red-50 text-red-700 text-xs border border-red-200">
+                    {feedbackError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-[#183B2B] mb-1.5">
+                    What was the actual material? *
+                  </label>
+                  <select
+                    value={suggestedCategory}
+                    onChange={(e) => setSuggestedCategory(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 rounded-xl border border-[#D3EAD7] bg-[#F7FAF7] text-sm text-[#183B2B] focus:outline-none focus:ring-2 focus:ring-[#16845B]"
+                  >
+                    <option value="">Select correct category...</option>
+                    {availableCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#183B2B] mb-1.5">
+                    Notes or Observations (optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={feedbackNotes}
+                    onChange={(e) => setFeedbackNotes(e.target.value)}
+                    placeholder="e.g., Clear polyethylene water bottle, mistaken for glass due to reflections"
+                    className="w-full px-3 py-2 rounded-xl border border-[#D3EAD7] bg-[#F7FAF7] text-xs text-[#183B2B] focus:outline-none focus:ring-2 focus:ring-[#16845B]"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowFeedbackModal(false)}
+                    className="px-4 py-2 text-xs font-bold text-[#52705F] hover:bg-[#F2F9F3] rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingFeedback}
+                    className="px-5 py-2 text-xs font-bold bg-[#16845B] hover:bg-[#126e4b] text-white rounded-xl shadow-xs transition flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {submittingFeedback ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -1,3 +1,5 @@
+export const CATEGORIES = ['Organic', 'Plastic', 'Paper', 'Metal', 'Glass', 'E-Waste'];
+
 export const CATEGORY_COLORS = {
   Organic: {
     bg: '#EAF5EC',

@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { fetchHistory, deleteHistoryItem, getImageUrl } from '../api/client';
-import { History, Trash2, Calendar, AlertTriangle, CheckCircle2, Filter, ChevronLeft, ChevronRight, RefreshCw, FileText } from 'lucide-react';
+import {
+  fetchHistory,
+  deleteHistoryItem,
+  exportHistoryCsv,
+  getImageUrl,
+} from '../api/client';
+import {
+  History,
+  Trash2,
+  Calendar,
+  AlertTriangle,
+  CheckCircle2,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  FileText,
+  Download,
+  Search,
+} from 'lucide-react';
 import { CATEGORY_COLORS } from '../utils/constants';
 
 const FILTER_CATEGORIES = ['All', 'Organic', 'Plastic', 'Paper', 'Metal', 'Glass', 'E-Waste'];
@@ -11,14 +29,17 @@ export default function HistoryPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [uncertainOnly, setUncertainOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState(null);
 
   const loadHistory = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchHistory(page, 9, selectedCategory);
+      const data = await fetchHistory(page, 9, selectedCategory, uncertainOnly ? true : null);
       setHistory(data.items || []);
       setTotal(data.total || 0);
       setTotalPages(data.total_pages || 1);
@@ -32,20 +53,38 @@ export default function HistoryPage() {
 
   useEffect(() => {
     loadHistory();
-  }, [page, selectedCategory]);
+  }, [page, selectedCategory, uncertainOnly]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this classification record?')) return;
-
     try {
       await deleteHistoryItem(id);
-      // Reload history
       loadHistory();
     } catch (err) {
       console.error('Delete error:', err);
       alert('Failed to delete item: ' + err.message);
     }
   };
+
+  const handleExportCsv = async () => {
+    setIsExporting(true);
+    try {
+      await exportHistoryCsv();
+    } catch (err) {
+      alert('Export failed: ' + err.message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Local filtering by search query if user searches by name/class
+  const displayItems = history.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const matchesClass = item.predicted_class?.toLowerCase().includes(query);
+    const matchesName = item.original_filename?.toLowerCase().includes(query);
+    return matchesClass || matchesName;
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -64,35 +103,74 @@ export default function HistoryPage() {
           </p>
         </div>
 
-        <button
-          onClick={loadHistory}
-          disabled={isLoading}
-          className="p-3 rounded-2xl bg-[#EAF5EC] hover:bg-[#D3EAD7] text-[#16845B] font-bold text-xs flex items-center gap-2 transition-all disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportCsv}
+            disabled={isExporting || total === 0}
+            className="px-4 py-2.5 rounded-2xl bg-[#16845B] hover:bg-[#126e4b] text-white font-bold text-xs flex items-center gap-2 transition-all shadow-xs disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+
+          <button
+            onClick={loadHistory}
+            disabled={isLoading}
+            className="p-2.5 rounded-2xl bg-[#EAF5EC] hover:bg-[#D3EAD7] text-[#16845B] font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
 
-      {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <Filter className="w-4 h-4 text-[#52705F] shrink-0 ml-1" />
-        {FILTER_CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              setSelectedCategory(cat);
-              setPage(1);
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              selectedCategory === cat
-                ? 'bg-[#16845B] text-white shadow-sm'
-                : 'bg-[#FFFFFF] text-[#52705F] border border-[#D3EAD7] hover:bg-[#F7FAF7] hover:text-[#183B2B]'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Search and Filters Bar */}
+      <div className="bg-[#FFFFFF] p-4 rounded-3xl border border-[#D3EAD7] shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-[#52705F]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by category or filename..."
+              className="w-full pl-10 pr-3.5 py-2 rounded-xl border border-[#D3EAD7] bg-[#F7FAF7] text-xs text-[#183B2B] focus:outline-none focus:ring-2 focus:ring-[#16845B]"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#52705F] shrink-0">
+            <input
+              type="checkbox"
+              checked={uncertainOnly}
+              onChange={(e) => {
+                setUncertainOnly(e.target.checked);
+                setPage(1);
+              }}
+              className="rounded text-[#16845B] focus:ring-[#16845B] w-4 h-4 accent-[#16845B]"
+            />
+            <span>Uncertain Predictions (&lt;60%) Only</span>
+          </label>
+        </div>
+
+        {/* Category Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-[#F2F9F3] scrollbar-none">
+          <Filter className="w-4 h-4 text-[#52705F] shrink-0 ml-1" />
+          {FILTER_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                setSelectedCategory(cat);
+                setPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategory === cat
+                  ? 'bg-[#16845B] text-white shadow-xs'
+                  : 'bg-[#F7FAF7] text-[#52705F] hover:bg-[#EAF5EC]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Error state */}
@@ -117,7 +195,7 @@ export default function HistoryPage() {
       )}
 
       {/* Empty State */}
-      {!isLoading && history.length === 0 && (
+      {!isLoading && displayItems.length === 0 && (
         <div className="bg-[#FFFFFF] rounded-3xl p-12 border border-[#D3EAD7] text-center max-w-lg mx-auto shadow-sm">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#EAF5EC] flex items-center justify-center text-[#16845B]">
             <FileText className="w-8 h-8" />
@@ -132,9 +210,9 @@ export default function HistoryPage() {
       )}
 
       {/* History Grid */}
-      {!isLoading && history.length > 0 && (
+      {!isLoading && displayItems.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {history.map((item) => {
+          {displayItems.map((item) => {
             const colorTheme = CATEGORY_COLORS[item.predicted_class] || CATEGORY_COLORS['Uncertain'];
             const confidencePct = Math.round(item.confidence * 100);
             const formattedDate = new Date(item.created_at).toLocaleDateString(undefined, {
@@ -164,14 +242,22 @@ export default function HistoryPage() {
                       <span
                         className="px-2.5 py-1 rounded-full text-[11px] font-bold border shadow-xs"
                         style={{
-                          backgroundColor: colorTheme.bg,
-                          color: colorTheme.text,
-                          borderColor: colorTheme.border,
+                          backgroundColor: colorTheme?.bg || '#EAF5EC',
+                          color: colorTheme?.text || '#16845B',
+                          borderColor: colorTheme?.border || '#D3EAD7',
                         }}
                       >
                         {item.predicted_class}
                       </span>
                     </div>
+
+                    {item.is_uncertain && (
+                      <div className="absolute bottom-2.5 left-2.5">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white shadow-xs">
+                          Low Confidence
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Details */}

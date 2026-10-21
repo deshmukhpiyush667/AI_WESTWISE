@@ -3,23 +3,28 @@ import ImageUploader from '../components/classify/ImageUploader';
 import PredictionCard from '../components/classify/PredictionCard';
 import GuidanceCard from '../components/classify/GuidanceCard';
 import { classifyWasteImage } from '../api/client';
-import { Leaf, Info, Sparkles, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Leaf, Info, Sparkles, CheckCircle, AlertTriangle, Trophy } from 'lucide-react';
 
 export default function ClassifyPage({ onClassificationComplete }) {
+  const { user, refreshUser } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [prediction, setPrediction] = useState(null);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const [error, setError] = useState(null);
 
   const handleFileSelect = (file) => {
     setSelectedFile(file);
     setPrediction(null);
+    setPointsAwarded(false);
     setError(null);
   };
 
   const handleClear = () => {
     setSelectedFile(null);
     setPrediction(null);
+    setPointsAwarded(false);
     setError(null);
   };
 
@@ -28,9 +33,14 @@ export default function ClassifyPage({ onClassificationComplete }) {
 
     setIsLoading(true);
     setError(null);
+    setPointsAwarded(false);
     try {
       const result = await classifyWasteImage(selectedFile);
       setPrediction(result);
+      if (user) {
+        setPointsAwarded(true);
+        refreshUser();
+      }
       if (onClassificationComplete) {
         onClassificationComplete(result);
       }
@@ -49,7 +59,7 @@ export default function ClassifyPage({ onClassificationComplete }) {
         <div className="max-w-2xl relative z-10 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EAF5EC] text-[#16845B] border border-[#D3EAD7] text-xs font-bold tracking-wide">
             <Sparkles className="w-3.5 h-3.5" />
-            AI-Driven Waste Segregation
+            AI-Driven Waste Segregation • MobileNetV3 (90.65% Accuracy)
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#183B2B] tracking-tight leading-tight">
             Classify Waste with <span className="text-[#16845B]">Precision</span>
@@ -73,6 +83,17 @@ export default function ClassifyPage({ onClassificationComplete }) {
         isLoading={isLoading}
         onClassify={handleClassify}
       />
+
+      {/* Points Awarded Banner */}
+      {pointsAwarded && user && (
+        <div className="p-4 rounded-2xl bg-[#EAF5EC] border border-[#D3EAD7] text-[#16845B] text-xs font-bold flex items-center justify-between shadow-xs animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4" />
+            <span>+10 Eco-Points awarded for recording your sustainable classification!</span>
+          </div>
+          <span className="font-extrabold text-xs">Total: {user.eco_points} pts</span>
+        </div>
+      )}
 
       {/* Error Banner */}
       {error && (
@@ -107,12 +128,12 @@ export default function ClassifyPage({ onClassificationComplete }) {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'Organic', bin: 'Green Bin', desc: 'Food & Wet Waste' },
-            { label: 'Plastic', bin: 'Blue Bin', desc: 'Bottles & Wrappers' },
-            { label: 'Paper', bin: 'Blue Bin', desc: 'Cardboard & Paper' },
-            { label: 'Metal', bin: 'Yellow Bin', desc: 'Cans & Aluminum' },
-            { label: 'Glass', bin: 'Cyan Bin', desc: 'Bottles & Jars' },
-            { label: 'E-Waste', bin: 'Red Bin', desc: 'Hazardous & Batteries' },
+            { label: 'Organic', bin: 'Green Bin', desc: 'Food & Compostables' },
+            { label: 'Plastic', bin: 'Blue Bin', desc: 'Bottles & Rigid Polymers' },
+            { label: 'Paper', bin: 'Blue Bin', desc: 'Cardboard & Pulp' },
+            { label: 'Metal', bin: 'Yellow Bin', desc: 'Aluminum & Steel Cans' },
+            { label: 'Glass', bin: 'Glass Bin', desc: 'Jars & Beverage Bottles' },
+            { label: 'E-Waste', bin: 'Special Drop-Off', desc: 'Electronics & Circuits' },
           ].map((cat) => (
             <div
               key={cat.label}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { fetchDashboardStats } from '../api/client';
-import { BarChart3, TrendingUp, Recycle, AlertOctagon, CheckCircle2, Layers, RefreshCw, Sparkles, PieChart } from 'lucide-react';
+import { BarChart3, TrendingUp, Recycle, AlertOctagon, CheckCircle2, Layers, RefreshCw, Sparkles, PieChart, MessageCircle } from 'lucide-react';
 import { CATEGORY_COLORS } from '../utils/constants';
 
-export default function DashboardPage() {
+export default function DashboardPage({ onNavigate }) {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,14 +47,24 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <button
-          onClick={loadStats}
-          disabled={isLoading}
-          className="p-3 rounded-2xl bg-[#EAF5EC] hover:bg-[#D3EAD7] text-[#16845B] font-bold text-xs flex items-center gap-2 transition-all disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh Metrics
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => onNavigate && onNavigate('chat')}
+            className="p-3 px-4 rounded-2xl bg-[#16845B] hover:bg-[#126e4b] text-white font-bold text-xs flex items-center gap-2 transition-all shadow-xs"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Chat with AI
+          </button>
+
+          <button
+            onClick={loadStats}
+            disabled={isLoading}
+            className="p-3 rounded-2xl bg-[#EAF5EC] hover:bg-[#D3EAD7] text-[#16845B] font-bold text-xs flex items-center gap-2 transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -136,6 +146,31 @@ export default function DashboardPage() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
         </div>
+      </div>
+
+      {/* Ask WasteWise AI Assistant Banner */}
+      <div className="bg-[#FFFFFF] p-5 sm:p-6 rounded-3xl border border-[#D3EAD7] shadow-[0_4px_20px_-2px_rgba(24,59,43,0.06)] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-[#EAF5EC] border border-[#D3EAD7] flex items-center justify-center text-[#16845B] shrink-0">
+            <MessageCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-base font-black text-[#183B2B]">
+              Have questions about sorting or recycling?
+            </h3>
+            <p className="text-xs text-[#52705F]">
+              Chat with our specialized WasteWise AI about battery safety, plastics, composting rules, or your recent scans.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => onNavigate && onNavigate('chat')}
+          className="w-full sm:w-auto px-5 py-2.5 bg-[#16845B] hover:bg-[#126e4b] text-white font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 shrink-0"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>Open Chat with AI</span>
+        </button>
       </div>
 
       {/* Main Charts & Analytics Section */}

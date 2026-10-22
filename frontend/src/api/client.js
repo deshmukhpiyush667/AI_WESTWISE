@@ -1,7 +1,9 @@
 /**
  * API client configuration for AI WasteWise Backend
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const rawBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
+// Strip trailing slashes and any accidentally appended '/api/v1' path
+const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '').replace(/\/api\/v1\/?$/, '');
 
 function getAuthHeaders(token = null) {
   const activeToken = token || localStorage.getItem('wastewise_token');
